@@ -1,8 +1,8 @@
 # Báo Cáo Cá Nhân — Lab 7
 
 **Họ tên:** Nguyễn Thanh Hòa
-**Nhóm:** [Tên nhóm]
-**Ngày:** 19/09/2023
+**Nhóm:** AuraFarming
+**Ngày:** 19/09/2026
 
 ## 1. Khởi động
 
@@ -25,7 +25,7 @@ Với 10.000 ký tự, `chunk_size=500`, `overlap=50`: `ceil((10000-50)/(500-50)
 Đã hoàn thiện `src/chunking.py`, `src/store.py` và `src/agent.py`.
 
 ```text
-42 passed in 0.30s
+42 passed in 0.15s
 ```
 
 ## 4. Kết quả truy xuất cá nhân
@@ -44,7 +44,19 @@ Chiến lược: **Heading-based chunking**, dùng RecursiveChunker làm fallbac
 
 Failure case của Query 2 cho thấy hệ thống nhận diện đúng tài liệu nhưng không đưa section chứa ngày tháng vào top-3. Semantic similarity theo chủ đề không luôn đồng nghĩa với khả năng trả lời đúng chi tiết.
 
-## Tự đánh giá
+## 5. Dự đoán độ tương tự
+
+| Cặp | Câu A | Câu B | Dự đoán |
+|---|---|---|---|
+| 1 | USTH công bố quy định học bổng cho sinh viên. | Trường đại học ban hành chính sách hỗ trợ học bổng cho người học. | Cao |
+| 2 | Hạn nộp hồ sơ học bổng là ngày 23/03/2026. | Máy tính xử lý ảnh bằng mạng nơ-ron. | Thấp |
+| 3 | Quy trình học bổng gồm tiếp nhận hồ sơ và công bố kết quả. | Các bước xét hỗ trợ tài chính của trường gồm nhận hồ sơ và ra quyết định. | Cao |
+| 4 | Green Tech trao 4 suất học bổng trong 6 tháng. | Chương trình Vallet trao học bổng cho sinh viên miền Bắc. | Thấp đến trung bình |
+| 5 | Sinh viên quốc tế chính quy thuộc phạm vi quy định học bổng. | Sinh viên trao đổi theo thỏa thuận hợp tác không thuộc quy định. | Trung bình |
+
+Các dự đoán dựa trên chủ đề và mức độ tương đồng ý nghĩa. Kết quả thực tế có thể khác vì embedding còn phụ thuộc ngôn ngữ, độ dài và các từ khóa nổi bật trong từng chunk.
+
+## 6. Tự đánh giá
 
 | Tiêu chí               |      Điểm |
 | ---------------------- | --------: |
