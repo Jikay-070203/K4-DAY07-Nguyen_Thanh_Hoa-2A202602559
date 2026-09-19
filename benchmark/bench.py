@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 import sys
+import os
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -47,7 +48,10 @@ def build_store():
     for path in sorted(DATA.glob("*.md")):
         metadata, content = parse_file(path)
         metadata["doc_id"] = path.stem
-        chunks = heading_chunks(content, chunker)
+        if os.getenv("BENCH_STRATEGY", "heading") == "recursive":
+            chunks = chunker.chunk(content)
+        else:
+            chunks = heading_chunks(content, chunker)
         for index, chunk in enumerate(chunks):
             store.add_documents([Document(f"{path.stem}#{index}", chunk, metadata)])
             count += 1

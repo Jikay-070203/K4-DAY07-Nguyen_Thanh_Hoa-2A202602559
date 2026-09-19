@@ -1,8 +1,8 @@
 # Báo Cáo Cá Nhân — Lab 7
 
-**Họ tên:** Nguyen Thanh Hoa  
-**Nhóm:** [Tên nhóm]  
-**Ngày:** 2026-09-19
+**Họ tên:** Nguyễn Thanh Hòa
+**Nhóm:** [Tên nhóm]
+**Ngày:** 19/09/2023
 
 ## 1. Khởi động
 
@@ -30,15 +30,15 @@ Với 10.000 ký tự, `chunk_size=500`, `overlap=50`: `ceil((10000-50)/(500-50)
 
 ## 4. Kết quả truy xuất cá nhân
 
-Backend: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
+Chiến lược: **Heading-based chunking**, dùng RecursiveChunker làm fallback cho section dài. Corpus được nạp thành 63 chunks. Backend: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
 
-| # | Chunk liên quan | Score | Kết quả |
-|---|---|---:|---|
-| 1 | Top-1 `usth-green-tech-scholarship-2026#0` (0.724620); đáp án ở `#1` top-2 (0.698088) | 0.698088 | Đạt; top-3 có 18,000,000 và 6 months. |
-| 2 | `usth-green-tech-scholarship-2026#0` ở top-2 | 0.618118 | Chưa đủ; thiếu ngày 23/03 và tháng 04. |
-| 3 | `usth-scholarship-procedure#1` | 0.687724 | Đạt; top-3 có Step 1–3. |
-| 4 | `usth-scholarship-application-2026#0` | 0.686447 | Đạt; có 16 tỷ VND và undergraduate. |
-| 5 | `usth-scholarship-regulation-2026#1` | 0.739502 | Đạt sau metadata filter. |
+| #   | Chunk liên quan                                                                       |    Score | Kết quả                                |
+| --- | ------------------------------------------------------------------------------------- | -------: | -------------------------------------- |
+| 1   | Top-1 `usth-green-tech-scholarship-2026#0` (0.724620); đáp án ở `#1` top-2 (0.698088) | 0.698088 | Đạt; top-3 có 18,000,000 và 6 months.  |
+| 2   | `usth-green-tech-scholarship-2026#0` ở top-2                                          | 0.618118 | Chưa đủ; thiếu ngày 23/03 và tháng 04. |
+| 3   | `usth-scholarship-procedure#1`                                                        | 0.687724 | Đạt; top-3 có Step 1–3.                |
+| 4   | `usth-scholarship-application-2026#0`                                                 | 0.686447 | Đạt; có 16 tỷ VND và undergraduate.    |
+| 5   | `usth-scholarship-regulation-2026#1`                                                  | 0.739502 | Đạt sau metadata filter.               |
 
 **Kết quả:** 4/5 query có chunk liên quan và gold markers trong top-3.
 
@@ -46,11 +46,11 @@ Failure case của Query 2 cho thấy hệ thống nhận diện đúng tài li�
 
 ## Tự đánh giá
 
-| Tiêu chí | Điểm |
-|---|---:|
-| Warm-up | 5/5 |
-| My Approach | 9/10 |
-| Core Implementation | 30/30 |
-| Similarity Predictions | 4/5 |
-| Competition Results | 8/10 |
-| **Tổng** | **56/60** |
+| Tiêu chí               |      Điểm |
+| ---------------------- | --------: |
+| Warm-up                |       5/5 |
+| My Approach            |      9/10 |
+| Core Implementation    |     30/30 |
+| Similarity Predictions |       4/5 |
+| Competition Results    |      8/10 |
+| **Tổng**               | **56/60** |
