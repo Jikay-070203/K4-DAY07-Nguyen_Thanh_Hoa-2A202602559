@@ -1,157 +1,67 @@
-# Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
+# Báo Cáo Nhóm — Lab 7
 
-**Nhóm:** [Tên nhóm]
-**Thành viên:** [Họ tên từng thành viên]
-**Ngày:** [Ngày nộp]
+**Nhóm:** [Tên nhóm]  
+**Thành viên:** Nguyen Thanh Hoa, [bổ sung thành viên]  
+**Ngày:** 2026-09-19
 
-> **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
+## 1. Lựa chọn tài liệu
 
-**Tổng điểm phần nhóm: 40** = Lựa chọn tài liệu (10) + Thiết kế chiến lược (15) + Chất lượng truy xuất (10) + Thuyết trình (5).
+**Chủ đề:** Dịch vụ và quy định học bổng đại học USTH.
 
----
+Nhóm chọn chủ đề này vì phù hợp yêu cầu K4-L3A và có đủ thông tin định lượng, thời hạn, điều kiện, đối tượng và quy trình để đánh giá retrieval. Corpus gồm 8 nguồn công khai trong `data/scholarship/`, có `sources.csv` và frontmatter metadata.
 
-## 1. Lựa chọn tài liệu (Document Set Quality) — Nhóm (10 điểm)
+Metadata chính: `audience`, `department`, `category`, `language`, `source_url`, `retrieved_at`, `document_version`, `license_or_permission`. Tất cả tài liệu đều có nguồn công khai, không chứa dữ liệu cá nhân hay thông tin đăng nhập.
 
-### Chủ đề (Domain) & Lý Do Chọn
+Các tài liệu tiêu biểu gồm `usth-green-tech-scholarship-2026.md`, `usth-scholarship-application-2026.md`, `usth-scholarship-procedure.md`, `usth-scholarship-regulation-2026.md` và `usth-vallet-scholarship-2026.md`. Tổng cộng có 8 tài liệu.
 
-**Chủ đề:** [ví dụ: Customer support FAQ, Luật Việt Nam, công thức nấu ăn, ...]
+## 2. Thiết kế chiến lược
 
-**Tại sao nhóm chọn chủ đề này?**
+Chiến lược cá nhân là **heading/section-aware kết hợp RecursiveChunker**. Văn bản được tách theo heading Markdown để các mục như `Scholarship Value` và `Important Dates` giữ được ngữ cảnh. Section dài hơn 500 ký tự tiếp tục được chia recursive và giữ heading trong từng chunk.
 
-> _Viết 2-3 câu:_
+Benchmark cuối nạp 8 tài liệu thành **63 chunks**, dùng local multilingual embedding:
 
-### Danh sách tài liệu (Data Inventory)
-
-| #   | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
-| --- | ------------ | ------------------ | -------------------- | -------- | --------------- |
-| 1   |              |                    |                      |          |                 |
-| 2   |              |                    |                      |          |                 |
-| 3   |              |                    |                      |          |                 |
-| 4   |              |                    |                      |          |                 |
-| 5   |              |                    |                      |          |                 |
-
-**Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-
-- [ ] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
-- [ ] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
-
-### Cấu trúc Metadata (Metadata Schema)
-
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
-| --------------- | ---- | ------------- | ------------------------------------------ |
-|                 |      |               |                                            |
-|                 |      |               |                                            |
-
----
-
-## 2. Thiết kế chiến lược (Strategy Design) — Nhóm (15 điểm)
-
-> Mỗi thành viên thử **một chiến lược khác nhau** trên cùng bộ tài liệu; nhóm tổng hợp và so sánh ở đây.
-
-### Phân tích đường cơ sở (Baseline Analysis)
-
-Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
-
-| Tài liệu | Chiến lược (Strategy)            | Số lượng Chunk | Độ dài trung bình | Giữ được ngữ cảnh không? |
-| -------- | -------------------------------- | -------------- | ----------------- | ------------------------ |
-|          | FixedSizeChunker (`fixed_size`)  |                |                   |                          |
-|          | SentenceChunker (`by_sentences`) |                |                   |                          |
-|          | RecursiveChunker (`recursive`)   |                |                   |                          |
-
-### Chiến lược của từng thành viên
-
-> Mỗi thành viên điền một khối dưới đây (copy thêm nếu nhóm có nhiều hơn 3 người).
-
-**Thành viên 1 — [Tên]**
-
-- **Loại chiến lược:** [FixedSize / Sentence / Recursive / custom]
-- **Mô tả & lý do chọn cho chủ đề này:** _(2-3 câu)_
-- **Code snippet (nếu custom):**
-
-```python
-# Dán mã nguồn (implementation) vào đây
+```text
+sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 ```
 
-**Thành viên 2 — [Tên]**
+Chiến lược này phù hợp với tài liệu quy định vì heading thường biểu thị một đơn vị ý nghĩa hoàn chỉnh. Điểm yếu là thông tin ở các section khác nhau vẫn có thể bị xếp hạng không đồng đều nếu câu hỏi hỏi chi tiết rất cụ thể như ngày tháng.
 
-- **Loại chiến lược:**
-- **Mô tả & lý do chọn:**
-- **Code snippet (nếu custom):**
+## 3. Câu hỏi và chất lượng truy xuất
 
-**Thành viên 3 — [Tên]**
+| # | Query | Gold answer | Filter |
+|---|---|---|---|
+| 1 | Green Tech có bao nhiêu suất, giá trị và thời hạn? | 4 suất; 18.000.000 VND/suất trong 6 tháng. | Không |
+| 2 | Hạn cuối Green Tech và thời gian bắt đầu? | 23/03/2026; dự kiến bắt đầu tháng 04/2026. | Không |
+| 3 | Quy trình học bổng và hỗ trợ tài chính gồm bước nào? | 3 bước: nhận hồ sơ; lập danh sách/trình Hội đồng SFA; công bố danh sách. | Không |
+| 4 | Quỹ học bổng 2026-2027 bao nhiêu và dành cho ai? | 16 tỷ VND cho undergraduate, master và doctoral candidates. | Không |
+| 5 | Ai thuộc phạm vi quy định học bổng 2026? | Sinh viên Việt Nam và quốc tế trong chương trình chính quy; loại trừ exchange/internship theo MoU. | `audience=student`, `category=scholarship-regulation` |
 
-- **Loại chiến lược:**
-- **Mô tả & lý do chọn:**
-- **Code snippet (nếu custom):**
+| # | Kết quả | Evidence |
+|---|---|---|
+| 1 | Đạt | Top-3 chứa `18,000,000` và `6 months`. |
+| 2 | Failure case | Đúng tài liệu ở top-2 nhưng thiếu `March 23, 2026` và `April 2026`. |
+| 3 | Đạt | Top-3 chứa Step 1, Step 2 và Step 3. |
+| 4 | Đạt | Top-3 chứa `VND 16 billion` và `undergraduate`. |
+| 5 | Đạt | Filtered top-3 đều thuộc regulation; unfiltered top-3 không lấy đúng regulation. |
 
-### So Sánh Giữa Các Thành Viên
+**Tổng:** 4/5 câu có chunk liên quan và gold markers trong top-3.
 
-| Thành viên | Chiến lược (Strategy) | Điểm truy xuất (/10) | Điểm mạnh | Điểm yếu |
-| ---------- | --------------------- | -------------------- | --------- | -------- |
-|            |                       |                      |           |          |
-|            |                       |                      |           |          |
-|            |                       |                      |           |          |
+Metadata filter giúp rõ rệt ở Query 5. Khi lọc theo `audience=student` và `category=scholarship-regulation`, kết quả tập trung đúng tài liệu quy định; khi bỏ filter, kết quả bị lẫn portal và application. Query 2 cho thấy đúng tài liệu chưa đủ nếu chunk không chứa chi tiết cần trả lời.
 
-**Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
+## 4. Bài học
 
-> _Viết 2-3 câu — đây là phần được đánh giá cao nhất (khả năng suy nghĩ & giải thích):_
+- Local multilingual embedding tốt hơn mock embedding cho corpus Việt-Anh.
+- Chunk theo heading giữ tốt các đơn vị ngữ nghĩa của văn bản quy định.
+- Cần kết hợp semantic retrieval với keyword/gold-marker check cho câu hỏi số liệu và ngày tháng.
 
----
+Nếu làm lại, nhóm sẽ chuẩn hóa toàn bộ tài liệu về UTF-8, bổ sung query expansion cho câu hỏi tiếng Việt và dùng metadata category cụ thể hơn.
 
-## 3. Câu hỏi đánh giá & Chất lượng truy xuất (Retrieval Quality) — Nhóm (10 điểm)
+## Tự đánh giá
 
-### Câu hỏi đánh giá & Câu trả lời chuẩn (nhóm thống nhất)
-
-> **Đúng 5 câu hỏi**, đa dạng, có thể kiểm chứng; **ít nhất 1 câu** cần lọc metadata mới trả lời tốt. Đây là bộ câu hỏi chung cho mọi thành viên chạy.
-
-| #   | Câu hỏi                                                                                                             | Gold answer                                                                                                                                                                  | Tài liệu nguồn                         | Filter                    |
-| --- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------- |
-| 1   | Học bổng Green Tech 2026 có bao nhiêu suất, giá trị bao nhiêu và kéo dài bao lâu?                                   | Có 4 suất học bổng, mỗi suất trị giá 18.000.000 VND trong 6 tháng.                                                                                                           | `usth-green-tech-scholarship-2026.md`  | Không                     |
-| 2   | Hạn cuối nộp hồ sơ học bổng Green Tech 2026 là ngày nào và thời gian dự kiến bắt đầu là khi nào?                    | Hạn nộp hồ sơ là ngày 23/03/2026; thời gian dự kiến bắt đầu là tháng 04/2026.                                                                                                | `usth-green-tech-scholarship-2026.md`  | Không                     |
-| 3   | Quy trình xét học bổng và hỗ trợ tài chính của USTH gồm những bước nào?                                             | Gồm 3 bước: tiếp nhận hồ sơ; lập danh sách và trình Hội đồng SFA để ra quyết định; công bố danh sách sinh viên nhận học bổng/hỗ trợ.                                         | `usth-scholarship-procedure.md`        | Không                     |
-| 4   | Trong năm học 2026–2027, USTH dự kiến dành bao nhiêu tiền cho quỹ học bổng và áp dụng cho những nhóm người học nào? | USTH dự kiến dành 16 tỷ VND cho sinh viên đại học, học viên cao học và nghiên cứu sinh.                                                                                      | `usth-scholarship-application-2026.md` | Không                     |
-| 5   | Đối tượng sinh viên nào được áp dụng các quy định học bổng năm 2026 của USTH?                                       | Sinh viên Việt Nam và sinh viên quốc tế đang theo học chương trình đào tạo chính quy; sinh viên trao đổi/thực tập theo MoU hoặc thỏa thuận hợp tác không thuộc quy định này. | `usth-scholarship-regulation-2026.md`  | `{"audience": "student"}` |
-
-### Tổng hợp chất lượng truy xuất của nhóm
-
-> Cách chấm (theo `docs/SCORING.md`): **2 điểm/câu** — top-3 chứa chunk liên quan + agent trả lời đúng (2), có liên quan nhưng thiếu/không ở top-1 (1), không có trong top-3 (0).
-
-| #   | Câu hỏi | Chiến lược tốt nhất cho câu này | Có chunk liên quan trong top-3? | Ghi chú |
-| --- | ------- | ------------------------------- | ------------------------------- | ------- |
-| 1   |         |                                 |                                 |         |
-| 2   |         |                                 |                                 |         |
-| 3   |         |                                 |                                 |         |
-| 4   |         |                                 |                                 |         |
-| 5   |         |                                 |                                 |         |
-
-**Lọc bằng metadata có giúp ích không? Ở câu hỏi nào?**
-
-> _Viết 2-3 câu:_
-
----
-
-## 4. Thuyết trình (Demo) & Bài học nhóm — Nhóm (5 điểm)
-
-**Những phân tích (insights) hay nhất nhóm sẽ trình bày:**
-
-> _Liệt kê 2-3 ý:_
-
-**Bài học rút ra khi so sánh trong nhóm:**
-
-> _Viết 2-3 câu — cùng tài liệu nhưng chiến lược khác nhau dẫn tới khác biệt gì?_
-
-**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu (data strategy)?**
-
-> _Viết 2-3 câu:_
-
----
-
-## Tự Đánh Giá (Phần Nhóm)
-
-| Tiêu chí                                 | Điểm tự đánh giá |
-| ---------------------------------------- | ---------------- |
-| Lựa chọn tài liệu (Document Set Quality) | / 10             |
-| Thiết kế chiến lược (Strategy Design)    | / 15             |
-| Chất lượng truy xuất (Retrieval Quality) | / 10             |
-| Thuyết trình (Demo)                      | / 5              |
-| **Tổng phần nhóm**                       | **/ 40**         |
+| Tiêu chí | Điểm |
+|---|---:|
+| Document Set Quality | 9/10 |
+| Strategy Design | 13/15 |
+| Retrieval Quality | 8/10 |
+| Demo & lessons | 4/5 |
+| **Tổng** | **34/40** |

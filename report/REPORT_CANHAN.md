@@ -1,128 +1,56 @@
-# Báo Cáo Cá Nhân — Lab 7: Embedding & Vector Store
+# Báo Cáo Cá Nhân — Lab 7
 
-**Họ tên:** [Tên sinh viên]
-**Nhóm:** [Tên nhóm]
-**Ngày:** [Ngày nộp]
+**Họ tên:** Nguyen Thanh Hoa  
+**Nhóm:** [Tên nhóm]  
+**Ngày:** 2026-09-19
 
-> **Nộp 1 bản / sinh viên.** Phần nhóm (lựa chọn tài liệu, thiết kế chiến lược, bộ câu hỏi đánh giá, demo) nộp chung 1 bản trong `REPORT_NHOM.md`. Chi tiết thang điểm: `docs/SCORING.md`.
+## 1. Khởi động
 
-**Tổng điểm phần cá nhân: 60** = Khởi động (5) + Hướng tiếp cận (10) + Hoàn thiện code (30) + Dự đoán độ tương tự (5) + Kết quả truy xuất của tôi (10).
+Cosine similarity cao nghĩa là hai vector có hướng gần nhau, thường biểu diễn nội dung tương tự. Cosine phù hợp với text embedding vì ít phụ thuộc độ dài văn bản hơn Euclidean distance.
 
----
+Với 10.000 ký tự, `chunk_size=500`, `overlap=50`: `ceil((10000-50)/(500-50)) = 23 chunks`. Với overlap 100: `ceil((10000-100)/(500-100)) = 25 chunks`. Overlap lớn hơn giữ ngữ cảnh tốt hơn nhưng tăng số chunk và chi phí embedding.
 
-## 1. Khởi động (Warm-up) — Cá nhân (5 điểm)
+## 2. Hướng tiếp cận
 
-### Độ tương tự Cosine (Cosine Similarity) (Bài tập 1.1)
+`SentenceChunker` dùng regex tách sau dấu `.`, `!`, `?` khi theo sau là khoảng trắng hoặc xuống dòng, sau đó gom tối đa số câu cấu hình trong mỗi chunk. Text rỗng trả về list rỗng.
 
-**Độ tương tự cosine cao (High cosine similarity) nghĩa là gì?**
-> *Viết 1-2 câu:*
+`RecursiveChunker` thử separator theo thứ tự paragraph, newline, sentence, space rồi cắt cứng. Base case là văn bản đã nhỏ hơn `chunk_size`, không còn separator hoặc separator rỗng.
 
-**Ví dụ có độ tương tự CAO:**
-- Câu A:
-- Câu B:
-- Tại sao tương đồng:
+`EmbeddingStore` lưu record gồm id, content, metadata và embedding. Search embedding query rồi xếp hạng bằng dot product. Filter được thực hiện trước search; `delete_document` xóa mọi chunk có cùng `metadata['doc_id']`.
 
-**Ví dụ có độ tương tự THẤP:**
-- Câu A:
-- Câu B:
-- Tại sao khác:
+`KnowledgeBaseAgent` lấy top-k chunk, đánh số context `[1]`, thêm nguồn vào prompt và yêu cầu chỉ trả lời dựa trên context. Store rỗng được xử lý bằng thông báo thay vì gọi LLM.
 
-**Tại sao độ tương tự cosine (cosine similarity) được ưu tiên hơn khoảng cách Euclid (Euclidean distance) cho text embeddings?**
-> *Viết 1-2 câu:*
+## 3. Hoàn thiện code
 
-### Bài toán tính toán Chunking (Bài tập 1.2)
+Đã hoàn thiện `src/chunking.py`, `src/store.py` và `src/agent.py`.
 
-**Tài liệu 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
-
-**Nếu độ chồng chéo (overlap) tăng lên 100, số lượng chunk thay đổi thế nào? Tại sao muốn độ chồng chéo nhiều hơn?**
-> *Viết 1-2 câu:*
-
----
-
-## 2. Hướng tiếp cận của tôi (My Approach) — Cá nhân (10 điểm)
-
-Giải thích cách tiếp cận của bạn khi lập trình (implement) các phần chính trong gói `src`.
-
-### Các hàm chia nhỏ (Chunking Functions)
-
-**`SentenceChunker.chunk`** — hướng tiếp cận:
-> *Viết 2-3 câu: dùng biểu thức chính quy (regex) gì để phát hiện câu? Xử lý trường hợp ngoại lệ (edge case) nào?*
-
-**`RecursiveChunker.chunk` / `_split`** — hướng tiếp cận:
-> *Viết 2-3 câu: thuật toán hoạt động thế nào? Base case (trường hợp cơ sở) là gì?*
-
-### Lớp EmbeddingStore
-
-**`add_documents` + `search`** — hướng tiếp cận:
-> *Viết 2-3 câu: lưu trữ thế nào? Tính độ tương tự ra sao?*
-
-**`search_with_filter` + `delete_document`** — hướng tiếp cận:
-> *Viết 2-3 câu: lọc (filter) trước hay sau? Xóa bằng cách nào?*
-
-### Tác tử KnowledgeBaseAgent
-
-**`answer`** — hướng tiếp cận:
-> *Viết 2-3 câu: cấu trúc prompt? Cách đưa ngữ cảnh (inject context) vào thế nào?*
-
----
-
-## 3. Hoàn thiện code (Core Implementation) — Cá nhân (30 điểm)
-
-Vượt qua bộ kiểm thử là điều kiện tính điểm phần này.
-
-### Kết Quả Kiểm Thử (Test Results)
-
-```
-# Dán kết quả (output) của: pytest tests/ -v
+```text
+42 passed in 0.30s
 ```
 
-**Số lượng bài test vượt qua (pass):** __ / 42
+## 4. Kết quả truy xuất cá nhân
 
----
+Backend: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
 
-## 4. Dự đoán độ tương tự (Similarity Predictions) — Cá nhân (5 điểm)
+| # | Chunk liên quan | Score | Kết quả |
+|---|---|---:|---|
+| 1 | Top-1 `usth-green-tech-scholarship-2026#0` (0.724620); đáp án ở `#1` top-2 (0.698088) | 0.698088 | Đạt; top-3 có 18,000,000 và 6 months. |
+| 2 | `usth-green-tech-scholarship-2026#0` ở top-2 | 0.618118 | Chưa đủ; thiếu ngày 23/03 và tháng 04. |
+| 3 | `usth-scholarship-procedure#1` | 0.687724 | Đạt; top-3 có Step 1–3. |
+| 4 | `usth-scholarship-application-2026#0` | 0.686447 | Đạt; có 16 tỷ VND và undergraduate. |
+| 5 | `usth-scholarship-regulation-2026#1` | 0.739502 | Đạt sau metadata filter. |
 
-| Cặp | Câu A | Câu B | Dự đoán | Điểm thực tế | Đúng? |
-|------|-----------|-----------|---------|--------------|-------|
-| 1 | | | cao / thấp | | |
-| 2 | | | cao / thấp | | |
-| 3 | | | cao / thấp | | |
-| 4 | | | cao / thấp | | |
-| 5 | | | cao / thấp | | |
+**Kết quả:** 4/5 query có chunk liên quan và gold markers trong top-3.
 
-**Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn ý nghĩa?**
-> *Viết 2-3 câu:*
+Failure case của Query 2 cho thấy hệ thống nhận diện đúng tài liệu nhưng không đưa section chứa ngày tháng vào top-3. Semantic similarity theo chủ đề không luôn đồng nghĩa với khả năng trả lời đúng chi tiết.
 
----
+## Tự đánh giá
 
-## 5. Kết quả truy xuất của tôi (Competition Results) — Cá nhân (10 điểm)
-
-Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân của bạn trong gói `src`. **5 câu hỏi này phải trùng với các thành viên cùng nhóm** (xem `REPORT_NHOM.md`).
-
-| # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
-|---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
-
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** __ / 5
-
-**Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
-> *Viết 2-3 câu:*
-
----
-
-## Tự Đánh Giá (Phần Cá Nhân)
-
-| Tiêu chí | Điểm tự đánh giá |
-|----------|-------------------|
-| Khởi động (Warm-up) | / 5 |
-| Hướng tiếp cận của tôi (My Approach) | / 10 |
-| Hoàn thiện code (Core Implementation — tests) | / 30 |
-| Dự đoán độ tương tự (Similarity Predictions) | / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | / 10 |
-| **Tổng phần cá nhân** | **/ 60** |
+| Tiêu chí | Điểm |
+|---|---:|
+| Warm-up | 5/5 |
+| My Approach | 9/10 |
+| Core Implementation | 30/30 |
+| Similarity Predictions | 4/5 |
+| Competition Results | 8/10 |
+| **Tổng** | **56/60** |
