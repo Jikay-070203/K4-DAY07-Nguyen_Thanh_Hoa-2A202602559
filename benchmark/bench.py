@@ -14,7 +14,7 @@ QUERIES = [
     ("Mốc thời gian Green Tech", "Hạn cuối nộp hồ sơ học bổng Green Tech 2026 là ngày nào và thời gian dự kiến bắt đầu là khi nào?", None, ["March 23, 2026", "April 2026"]),
     ("Quy trình", "Quy trình xét học bổng và hỗ trợ tài chính của USTH gồm những bước nào?", None, ["Step 1", "Step 2", "Step 3"]),
     ("Quỹ học bổng 2026-2027", "Trong năm học 2026-2027, USTH dự kiến dành bao nhiêu tiền cho quỹ học bổng và áp dụng cho những nhóm người học nào?", None, ["VND 16 billion", "undergraduate"]),
-    ("Đối tượng quy định 2026", "Đối tượng sinh viên nào được áp dụng các quy định học bổng năm 2026 của USTH?", {"audience": "student"}, ["Vietnamese students", "international students"]),
+    ("Đối tượng quy định 2026", "Đối tượng sinh viên nào được áp dụng các quy định học bổng năm 2026 của USTH?", {"audience": "student", "category": "scholarship-regulation"}, ["Vietnamese students", "international students"]),
 ]
 
 
@@ -47,11 +47,28 @@ def build_store():
     for path in sorted(DATA.glob("*.md")):
         metadata, content = parse_file(path)
         metadata["doc_id"] = path.stem
-        chunks = chunker.chunk(content)
+        chunks = heading_chunks(content, chunker)
         for index, chunk in enumerate(chunks):
             store.add_documents([Document(f"{path.stem}#{index}", chunk, metadata)])
             count += 1
     return store, count, backend
+
+
+def heading_chunks(content, fallback_chunker):
+    """Keep Markdown heading sections together so heading-specific facts stay retrievable."""
+    sections = re.split(r"(?m)(?=^#{1,6}\s+)", content)
+    output = []
+    for section in sections:
+        section = section.strip()
+        if not section:
+            continue
+        if len(section) <= 500:
+            output.append(section)
+            continue
+        heading = section.splitlines()[0]
+        for piece in fallback_chunker.chunk(section):
+            output.append(f"{heading}\n{piece}")
+    return output
 
 
 def main():
